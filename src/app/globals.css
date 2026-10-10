@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fbf6f0;
+  --surface: #ffffff;
+  --foreground: #2b1d16;
+  --muted: #8a7466;
+  --border: #eadfd4;
+  --primary: #5b3a29;
+  --primary-foreground: #fff8f1;
+  --accent: #c8873a;
+  --success: #2f7d4f;
+  --danger: #b4412f;
+  color-scheme: light;
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-sans);
+  --font-display: var(--font-display);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility card {
+    @apply rounded-2xl border border-border bg-surface p-4;
+}
+
+@utility input {
+    @apply w-full rounded-xl border border-border bg-surface px-3 py-2.5 text-base outline-none focus:border-accent focus:ring-2 focus:ring-accent/25;
+}
+
+@utility label {
+    @apply mb-1 block text-sm font-medium text-muted;
+}
+
+@utility btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition active:scale-[0.98] disabled:opacity-50;
+}
+
+@utility btn-primary {
+    @apply btn bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+@utility btn-ghost {
+    @apply btn border border-border bg-surface text-foreground hover:bg-background;
+}
+
+@utility btn-danger {
+    @apply btn border border-danger/30 bg-surface text-danger hover:bg-danger/5;
+}
+
+@utility chip {
+    @apply inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold;
 }
