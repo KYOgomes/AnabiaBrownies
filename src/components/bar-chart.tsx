@@ -72,3 +72,38 @@ export function BarChart({ bars, caption }: { bars: Bar[]; caption: string }) {
     </figure>
   );
 }
+
+export type HBar = { key: string; label: string; value: number };
+
+/** Barras horizontais ordenadas (uma série), com o valor na ponta de cada barra. */
+export function HBarChart({ bars, unit }: { bars: HBar[]; unit: (n: number) => string }) {
+  const max = Math.max(...bars.map((b) => b.value), 0);
+  return (
+    <figure>
+      <ul className="space-y-2.5">
+        {bars.map((b) => {
+          const pct = max > 0 ? (b.value / max) * 100 : 0;
+          return (
+            <li key={b.key} className="grid grid-cols-[minmax(0,7.5rem)_1fr] items-center gap-3">
+              <span className="truncate text-sm font-medium" title={b.label}>{b.label}</span>
+              {/* mr-14 reserva espaço para o valor na ponta da maior barra */}
+              <div className="relative mr-14 flex h-5 items-center">
+                <div
+                  className="h-full rounded-r bg-primary"
+                  style={{ width: b.value > 0 ? `max(${pct}%, 3px)` : 0 }}
+                  aria-hidden
+                />
+                <span
+                  className="absolute whitespace-nowrap text-xs font-semibold tabular-nums"
+                  style={{ left: `calc(${pct}% + 6px)` }}
+                >
+                  {unit(b.value)}
+                </span>
+              </div>
+            </li>
+          );
+        })}
+      </ul>
+    </figure>
+  );
+}

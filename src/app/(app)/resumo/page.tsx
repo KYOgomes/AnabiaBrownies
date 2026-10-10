@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BarChart, type Bar } from "@/components/bar-chart";
+import { BarChart, HBarChart, type Bar } from "@/components/bar-chart";
 import { OrderRow } from "@/components/order-row";
 import { SubmitButton } from "@/components/submit-button";
 import {
@@ -50,7 +50,13 @@ export default async function SummaryPage({ searchParams }: PageProps<"/resumo">
   const chartFrom = range?.from ?? `${addMonths(month, -5)}-01`;
   const chartTo = range?.to ?? monthRange(month).to;
 
-  const [summary, { data: sales }, { data: unpaid }] = await Promise.all([
+  let flavorsQ = supabase
+    .from("order_items")
+    .select("quantity, brownie_type_id, brownie_types(name), orders!inner(date, status)")
+    .neq("orders.status", "cancelled");
+  if (range) flavorsQ = flavorsQ.gte("orders.date", range.from).lte("orders.date", range.to);
+
+  const [summary, { data: sales }, { data: unpaid }, { data: flavorItems }] = await Promise.all([
     getSummary(supabase, range),
     period === "hoje"
       ? Promise.resolve({ data: [] as { date: string; total: number }[] })
@@ -69,7 +75,20 @@ export default async function SummaryPage({ searchParams }: PageProps<"/resumo">
       .order("date", { ascending: false })
       .limit(50)
       .overrideTypes<Order[], { merge: false }>(),
+    flavorsQ,
   ]);
+
+  // Sabores mais pedidos (em brownies) no período
+  const flavorTotals = new Map<string, { label: string; value: number }>();
+  for (const i of flavorItems ?? []) {
+    const name = (i.brownie_types as unknown as { name: string } | null)?.name ?? "?";
+    const f = flavorTotals.get(i.brownie_type_id) ?? { label: name, value: 0 };
+    f.value += i.quantity;
+    flavorTotals.set(i.brownie_type_id, f);
+  }
+  const flavorBars = [...flavorTotals]
+    .map(([key, f]) => ({ key, ...f }))
+    .sort((a, b) => b.value - a.value);
 
   const byKey = new Map<string, number>();
   for (const s of sales ?? []) {
@@ -180,6 +199,17 @@ export default async function SummaryPage({ searchParams }: PageProps<"/resumo">
           />
         </section>
       )}
+
+      {/* Sabores */}
+      <section className="card mt-6">
+        <h2 className="font-semibold">Sabores mais pedidos</h2>
+        <p className="mb-4 text-xs text-muted first-letter:uppercase">{periodLabel} · em brownies</p>
+        {flavorBars.length > 0 ? (
+          <HBarChart bars={flavorBars} unit={(n) => `${n} un.`} />
+        ) : (
+          <p className="text-sm text-muted">Nenhum pedido neste período.</p>
+        )}
+      </section>
 
       {/* Não pagos */}
       <section className="mt-6">
