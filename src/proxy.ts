@@ -23,13 +23,15 @@ export async function proxy(request: NextRequest) {
     },
   );
 
-  const { data } = await supabase.auth.getUser();
+  // Valida o JWT localmente e renova a sessão quando necessário
+  const { data } = await supabase.auth.getClaims();
+  const loggedIn = !!data?.claims.sub;
   const isLogin = request.nextUrl.pathname.startsWith("/login");
 
-  if (!data.user && !isLogin) {
+  if (!loggedIn && !isLogin) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (data.user && isLogin) {
+  if (loggedIn && isLogin) {
     return NextResponse.redirect(new URL("/", request.url));
   }
   return response;

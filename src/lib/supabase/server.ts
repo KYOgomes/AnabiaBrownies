@@ -28,10 +28,14 @@ export async function createClient() {
   );
 }
 
-/** Cliente autenticado; redireciona para /login se não houver sessão. */
+/**
+ * Cliente autenticado; redireciona para /login se não houver sessão.
+ * getClaims() valida o JWT localmente (chave assimétrica em cache), sem ida
+ * ao servidor de Auth a cada request.
+ */
 export async function requireUser() {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  if (!data.user) redirect("/login");
-  return { supabase, user: data.user };
+  const { data } = await supabase.auth.getClaims();
+  if (!data?.claims.sub) redirect("/login");
+  return { supabase, userId: data.claims.sub };
 }

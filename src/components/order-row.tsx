@@ -29,6 +29,7 @@ export function OrderRow({ order, showDate }: { order: Order; showDate?: boolean
       />
       <Link
         href={`/pedido/${order.id}`}
+        prefetch={false}
         className={`min-w-0 flex-1 transition-opacity ${paid ? "opacity-40" : ""}`}
       >
         <p className="truncate font-semibold">{order.customer_name ?? "Venda avulsa"}</p>

@@ -6,7 +6,7 @@ import { requireUser } from "@/lib/supabase/server";
 
 export async function saveStock(date: string, formData: FormData) {
   if (!isISODate(date)) return;
-  const { supabase, user } = await requireUser();
+  const { supabase, userId } = await requireUser();
 
   const upserts: { owner_id: string; date: string; brownie_type_id: string; quantity: number }[] = [];
   const removals: string[] = [];
@@ -14,7 +14,7 @@ export async function saveStock(date: string, formData: FormData) {
     if (!key.startsWith("stock_")) continue;
     const typeId = key.slice(6);
     const quantity = Math.max(0, Math.floor(Number(value) || 0));
-    if (quantity > 0) upserts.push({ owner_id: user.id, date, brownie_type_id: typeId, quantity });
+    if (quantity > 0) upserts.push({ owner_id: userId, date, brownie_type_id: typeId, quantity });
     else removals.push(typeId);
   }
 

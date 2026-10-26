@@ -1,20 +1,47 @@
 import Link from "next/link";
 import { addMonths, formatMonth, monthGrid, monthOf } from "@/lib/dates";
+import { LinkPending } from "./link-pending";
 
 const WEEKDAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
 export type DayTotals = Map<string, { available: number; sold: number }>;
+/** Por dia: quantos pedidos (não cancelados) e quantos ainda não pagos. */
+export type DayPayments = Map<string, { orders: number; unpaid: number }>;
+
+function PaymentIcon({ unpaid, onDark }: { unpaid: number; onDark: boolean }) {
+  const ring = onDark ? "ring-1 ring-primary-foreground" : "";
+  return unpaid === 0 ? (
+    <span
+      className={`absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-success text-white ${ring}`}
+      title="Todos os pedidos pagos"
+    >
+      <svg viewBox="0 0 12 12" className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="m2.5 6.2 2.3 2.3 4.7-5" />
+      </svg>
+      <span className="sr-only">todos pagos</span>
+    </span>
+  ) : (
+    <span
+      className={`absolute right-0.5 top-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold leading-none text-white ${ring}`}
+      title={`${unpaid} pedido${unpaid === 1 ? "" : "s"} sem pagamento`}
+    >
+      $<span className="sr-only">{unpaid} sem pagamento</span>
+    </span>
+  );
+}
 
 export function Calendar({
   month,
   selected,
   today,
   days,
+  payments,
 }: {
   month: string;
   selected: string;
   today: string;
   days: DayTotals;
+  payments: DayPayments;
 }) {
   return (
     <section>
@@ -22,12 +49,12 @@ export function Calendar({
         <h1 className="font-display text-2xl font-semibold first-letter:uppercase">{formatMonth(month)}</h1>
         <div className="flex gap-1">
           {month !== monthOf(today) && (
-            <Link href={`/?dia=${today}`} scroll={false} className="btn-ghost h-9 px-3 py-0 text-xs">
+            <Link href={`/?dia=${today}`} scroll={false} prefetch={false} className="btn-ghost h-9 px-3 py-0 text-xs">
               Hoje
             </Link>
           )}
-          <Link href={`/?mes=${addMonths(month, -1)}&dia=${selected}`} scroll={false} className="btn-ghost h-9 w-9 p-0" aria-label="Mês anterior">‹</Link>
-          <Link href={`/?mes=${addMonths(month, 1)}&dia=${selected}`} scroll={false} className="btn-ghost h-9 w-9 p-0" aria-label="Próximo mês">›</Link>
+          <Link href={`/?mes=${addMonths(month, -1)}&dia=${selected}`} scroll={false} prefetch={false} className="btn-ghost h-9 w-9 p-0" aria-label="Mês anterior">‹</Link>
+          <Link href={`/?mes=${addMonths(month, 1)}&dia=${selected}`} scroll={false} prefetch={false} className="btn-ghost h-9 w-9 p-0" aria-label="Próximo mês">›</Link>
         </div>
       </div>
 
@@ -43,6 +70,7 @@ export function Calendar({
             const has = d && (d.available > 0 || d.sold > 0);
             const left = d ? d.available - d.sold : 0;
             const isSelected = date === selected;
+            const pay = payments.get(date);
             const tone = !has
               ? ""
               : d.available === 0
@@ -54,13 +82,15 @@ export function Calendar({
               <Link
                 key={date}
                 href={`/?mes=${monthOf(date)}&dia=${date}`}
-                scroll={false}
-                className={`flex aspect-square flex-col items-center justify-between rounded-xl p-1 text-sm transition ${
+                scroll={false} prefetch={false}
+                className={`relative flex aspect-square flex-col items-center justify-between rounded-xl p-1 text-sm transition ${
                   monthOf(date) === month ? "" : "opacity-35"
                 } ${isSelected ? "bg-primary text-primary-foreground" : `${tone} hover:bg-background`} ${
                   date === today && !isSelected ? "ring-2 ring-accent" : ""
                 }`}
               >
+                <LinkPending />
+                {pay && pay.orders > 0 && <PaymentIcon unpaid={pay.unpaid} onDark={isSelected} />}
                 <span className="font-semibold">{Number(date.slice(8))}</span>
                 <span className={`text-[10px] font-medium leading-tight tabular-nums ${isSelected ? "" : "text-muted"}`}>
                   {has ? `${d.sold}/${d.available}` : " "}
@@ -76,6 +106,12 @@ export function Calendar({
         <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-success/30" /> esgotado</span>
         <span className="flex items-center gap-1.5"><i className="h-3 w-3 rounded bg-danger/20" /> sem produção</span>
         <span>· vendidos/disponíveis</span>
+        <span className="flex items-center gap-1.5">
+          <i className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-success text-[8px] not-italic text-white">✓</i> tudo pago
+        </span>
+        <span className="flex items-center gap-1.5">
+          <i className="flex h-3.5 w-3.5 items-center justify-center rounded-full bg-accent text-[9px] font-bold not-italic text-white">$</i> falta receber
+        </span>
       </div>
     </section>
   );

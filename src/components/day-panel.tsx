@@ -10,7 +10,6 @@ import { ORDER_SELECT, type BrownieType, type Expense, type Order, type PriceOpt
 import { ExpenseList } from "./expense-list";
 import { OrderRow } from "./order-row";
 import { QuickOrderForm } from "./quick-order-form";
-import { ScrollOnChange } from "./scroll-on-change";
 import { StockCard } from "./stock-card";
 import { SummaryCard } from "./summary-card";
 
@@ -56,14 +55,13 @@ export async function DayPanel({ date, today }: { date: string; today: string })
 
   return (
     <section className="mt-6">
-      <ScrollOnChange value={date} />
       <div className="mb-3 flex items-center gap-2">
         <div className="min-w-0 flex-1">
           <h2 className="font-display text-xl font-semibold first-letter:uppercase">{formatLong(date)}</h2>
           {date === today && <p className="text-sm font-medium text-accent">Hoje</p>}
         </div>
-        <Link href={nav(addDays(date, -1))} scroll={false} className="btn-ghost h-9 w-9 p-0" aria-label="Dia anterior">‹</Link>
-        <Link href={nav(addDays(date, 1))} scroll={false} className="btn-ghost h-9 w-9 p-0" aria-label="Próximo dia">›</Link>
+        <Link href={nav(addDays(date, -1))} scroll={false} prefetch={false} className="btn-ghost h-9 w-9 p-0" aria-label="Dia anterior">‹</Link>
+        <Link href={nav(addDays(date, 1))} scroll={false} prefetch={false} className="btn-ghost h-9 w-9 p-0" aria-label="Próximo dia">›</Link>
       </div>
 
       <dl className="mb-4 grid grid-cols-4 gap-2 text-center">
