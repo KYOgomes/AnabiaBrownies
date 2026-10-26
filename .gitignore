@@ -9,7 +9,7 @@
 !.yarn/plugins
 !.yarn/releases
 !.yarn/versions
-
+#testeando el ignore
 # testing
 /coverage
 
