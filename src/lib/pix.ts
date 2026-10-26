@@ -42,6 +42,7 @@ export function pixPayload({
 }) {
   const body =
     field("00", "01") + // versão do payload
+    field("01", "11") + // QR estático (reutilizável)
     field("26", field("00", "br.gov.bcb.pix") + field("01", key)) +
     field("52", "0000") + // categoria do comerciante
     field("53", "986") + // moeda: BRL
@@ -54,10 +55,36 @@ export function pixPayload({
   return withCrcId + crc16(withCrcId);
 }
 
+/**
+ * Deixa a chave no formato que o Pix espera: telefone "+55DDDNUMERO", CPF/CNPJ
+ * só dígitos, e-mail minúsculo, chave aleatória como está.
+ */
+export function normalizePixKey(raw: string) {
+  const key = raw.trim();
+  if (key.includes("@")) return key.toLowerCase();
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(key)) return key.toLowerCase();
+  const digits = key.replace(/\D/g, "");
+  if (key.startsWith("+")) return `+${digits}`;
+  if (digits.length === 11 && /^\d{2}9/.test(digits) && !isCpf(digits)) return `+55${digits}`; // celular sem +55
+  if (digits.length === 13 && digits.startsWith("55")) return `+${digits}`;
+  return digits || key; // CPF (11) ou CNPJ (14)
+}
+
+function isCpf(d: string) {
+  if (/^(\d)\1{10}$/.test(d)) return false;
+  const check = (len: number) => {
+    let sum = 0;
+    for (let i = 0; i < len; i++) sum += Number(d[i]) * (len + 1 - i);
+    return ((sum * 10) % 11) % 10;
+  };
+  return check(9) === Number(d[9]) && check(10) === Number(d[10]);
+}
+
 /** Configuração vinda das variáveis de ambiente (a chave não fica no código). */
 export function pixConfig() {
-  const key = process.env.PIX_KEY?.trim();
-  if (!key) return null;
+  const raw = process.env.PIX_KEY?.trim();
+  if (!raw) return null;
+  const key = normalizePixKey(raw);
   return {
     key,
     name: process.env.PIX_NAME?.trim() || "Anabia Brownies",

@@ -41,7 +41,11 @@ export default async function PixPage() {
         dangerouslySetInnerHTML={{ __html: svg }}
       />
 
-      <ol className="mt-5 max-w-sm space-y-1 text-left text-sm text-muted">
+      <p className="mt-3 text-sm text-muted">
+        Chave Pix: <span className="font-semibold text-foreground">{config.key}</span>
+      </p>
+
+      <ol className="mt-4 max-w-sm space-y-1 text-left text-sm text-muted">
         <li>1. Abra o app do seu banco e escolha <strong className="text-foreground">Pix → Ler QR code</strong>.</li>
         <li>2. Aponte a câmera para o código acima.</li>
         <li>3. <strong className="text-foreground">Digite o valor</strong> do seu pedido e confirme.</li>
